@@ -1,11 +1,13 @@
 #pragma once
 
 #include "OpenGEX/OpenGEX.h"
+#include "RotationUtility.h"
 
 #include <Kore/Graphics4/Graphics.h>
 #include <Kore/Math/Quaternion.h>
 
 #include <vector>
+#include <map>
 
 struct Mesh {
 	int numFaces;
@@ -57,7 +59,7 @@ struct Light {
 };
 
 struct Material {
-	const char* materialName;
+	char* materialName;
 	char* textureName;
 	unsigned int materialIndex;
 	
@@ -81,13 +83,13 @@ struct BoneNode {
 	int nodeDepth;
 	BoneNode* parent;
 	
-	Kore::mat4 transform;		// bind matrix
+	Kore::mat4 bind;
+	Kore::mat4 transform;
 	Kore::mat4 local;
 	Kore::mat4 combined, combinedInv;
 	Kore::mat4 finalTransform;
 	
-	Kore::Quaternion interQuat;
-	Kore::Quaternion quaternion;	// local rotation
+	Kore::Quaternion rotation;	// local rotation
 	
 	bool initialized = false;
 	
@@ -95,13 +97,37 @@ struct BoneNode {
 	
 	// Constraints
 	Kore::vec3 axes;
-	std::vector<Kore::vec2> constrain;	// <min, max>
+	std::map<const char* const, float> constrain;	// <min, max>
 	
-	BoneNode() : transform(Kore::mat4::Identity()), local(Kore::mat4::Identity()),
-	combined(Kore::mat4::Identity()), combinedInv(Kore::mat4::Identity()),
-	finalTransform(Kore::mat4::Identity()),
-	quaternion(Kore::Quaternion(0, 0, 0, 1)), interQuat(Kore::Quaternion(0, 0, 0, 1)),
-	axes(Kore::vec3(0, 0, 0)) {}
+	BoneNode() :
+		transform(Kore::mat4::Identity()),
+		local(Kore::mat4::Identity()),
+		combined(Kore::mat4::Identity()),
+		combinedInv(Kore::mat4::Identity()),
+		finalTransform(Kore::mat4::Identity()),
+		rotation(Kore::Quaternion(0, 0, 0, 1)),
+		axes(Kore::vec3(0, 0, 0))
+	{}
+	
+	Kore::vec3 getPosition() {
+		Kore::vec3 result;
+		
+		Kore::vec4 pos = combined * Kore::vec4(0, 0, 0, 1);
+		pos *= 1.0 / pos.w();
+		
+		result.x() = pos.x();
+		result.y() = pos.y();
+		result.z() = pos.z();
+		
+		return result;
+	}
+	
+	Kore::Quaternion getOrientation() {
+		Kore::Quaternion result;
+		Kore::RotationUtility::getOrientation(&combined, &result);
+		
+		return result;
+	}
 };
 
 struct CompareBones {
@@ -117,6 +143,7 @@ public:
 	
 	void setScale(float scaleFactor);
 	Kore::mat4 M;
+	Kore::mat4 Mmirror;
 	
 	long meshesCount;
 	float scale;

@@ -1,7 +1,6 @@
 #include "pch.h"
 #include "MeshObject.h"
 
-#include <Kore/Graphics1/Color.h>
 #include <Kore/IO/FileReader.h>
 #include <Kore/Log.h>
 
@@ -435,8 +434,14 @@ Geometry* MeshObject::ConvertGeometryNode(const OGEX::GeometryNodeStructure& str
 Material* MeshObject::ConvertMaterial(const OGEX::MaterialStructure& materialStructure) {
 	Material* material = new Material();
 	
-	material->materialName = materialStructure.GetStructureName();
-	material->materialIndex = getIndexFromString(material->materialName, 8);
+	const char* materialName = static_cast<const char*>(materialStructure.GetMaterialName());
+	int length = (int)strlen(materialName) + 1;
+	material->materialName = new char[length]();
+	copyString(materialName, material->materialName, length);
+	
+	const char* mat = materialStructure.GetStructureName();
+	material->materialIndex = getIndexFromString(mat, 8);
+	
 	//log(Info, "Material name %s, index %i", material->materialName, material->materialIndex);
 	
 	const Structure* subStructure = materialStructure.GetFirstSubnode();
@@ -539,7 +544,8 @@ BoneNode* MeshObject::ConvertBoneNode(const OGEX::BoneNodeStructure& structure) 
 	const Structure *subStructure = structure.GetFirstSubstructure(OGEX::kStructureTransform);
 	const OGEX::TransformStructure& transformStructure = *static_cast<const OGEX::TransformStructure *>(subStructure);
 	const float* transform = transformStructure.GetTransform();
-	bone->transform = getMatrix4x4(transform);
+	bone->bind = getMatrix4x4(transform);
+	bone->transform = bone->bind;
 	bone->local = bone->transform;
 	
 	// Get node animation
@@ -547,8 +553,6 @@ BoneNode* MeshObject::ConvertBoneNode(const OGEX::BoneNodeStructure& structure) 
 	if (subStructure != nullptr) {
 		const OGEX::AnimationStructure& animationStructure = *static_cast<const OGEX::AnimationStructure *>(subStructure);
 		const OGEX::TrackStructure& trackStructure = *static_cast<const OGEX::TrackStructure *>(animationStructure.GetFirstSubstructure(OGEX::kStructureTrack));
-		const OGEX::TimeStructure* timeStructure = trackStructure.GetTimeStructure();
-		const OGEX::KeyStructure* keyStructureTime = timeStructure->GetKeyValueStructure();
 		
 		const OGEX::ValueStructure* valueStructure = trackStructure.GetValueStructure();
 		const OGEX::KeyStructure* keyStructureVal = valueStructure->GetKeyValueStructure();
@@ -615,9 +619,9 @@ void MeshObject::setScale(float scaleFactor) {
 	BoneNode* root = bones[0];
 	
 	mat4 scaleMat = mat4::Identity();
-	scaleMat.Set(3, 3, 1.0/scaleFactor);
+	scaleMat.Set(3, 3, 1.0 / scaleFactor);
 	
-	root->transform = root->transform * scaleMat; //T * R * S
+	root->transform = root->transform * scaleMat; // T * R * S
 	root->local = root->transform;
 	
 	scale = scaleFactor;

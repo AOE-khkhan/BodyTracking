@@ -1,47 +1,60 @@
 #pragma once
 
-#include <Kore/Graphics4/Graphics.h>
+#include "Avatar.h"
+
 #include <Kore/Math/Quaternion.h>
 
-#include <iostream>
 #include <fstream>
-#include <sstream>
 
 class Logger {
 	
 private:
-	const char* positionData = "positionData";
-	const char* initTransRotFilename = "initTransAndRot";
-	const char* logDataFilename = "logData";
+	// Input and output file to for raw data
+	std::fstream logDataReader;
+	std::ofstream logdataWriter;
+
+	// Output file to save data for MotionRecognition
+	std::ofstream motionRecognitionWriter;
+
+	// Output file to save data for hmm
+	std::ofstream hmmWriter;
+	std::ofstream hmmAnalysisWriter;
 	
-	const char* logData = "logData";
-	
-	std::stringstream positionDataPath;
-	std::stringstream initTransRotPath;
-	std::stringstream logDataPath;
-	
-	bool initPositionData;
-	std::fstream positionDataOutputFile;
-	
-	bool initTransRotData;
-	std::fstream initTransRotDataOutputFile;
-	
-	bool initLogData;
-	std::fstream logDataOutputFile;
-	
-	int currLineNumber = 0;
-	std::fstream positionDataInputFile;
-	
-	bool readLine(std::string str, Kore::vec3* rawPos, Kore::Quaternion* rawRot);
+	// Output file to save data for evaluation
+	std::fstream evaluationDataOutputFile;
+	std::fstream evaluationConfigOutputFile;
 	
 public:
 	Logger();
 	~Logger();
-	void saveData(Kore::vec3 rawPos, Kore::Quaternion rawRot);
-	void saveInitTransAndRot(Kore::vec3 initPos, Kore::Quaternion initRot);
 	
-	void saveLogData(const char* str, float num);
+	void startLogger(const char* filename);
+	void endLogger();
+	void saveData(const char* tag, Kore::vec3 rawPos, Kore::Quaternion rawRot, float scale);
 	
-	bool readData(int line, const int numOfEndEffectors, const char* filename, Kore::vec3* rawPos, Kore::Quaternion* rawRot);
-	void readInitTransAndRot(const char* filename, Kore::vec3* initPos, Kore::Quaternion* initRot);
+	void startEvaluationLogger(const char* filename, int ikMode, float lambda, float errorMaxPos, float errorMaxRot, int maxSteps);
+	void saveEvaluationData(Avatar *avatar);
+	void endEvaluationLogger();
+
+	// Machine Learning Motion Recognition:
+	// Create a new sensor reading table
+	void startMotionRecognitionLogger(const char* filename);
+	// Stop writing to the previously created sensor reading table
+	void endMotionRecognitionLogger();
+	// Write sensor data to the previously created sensor reading table
+	void saveMotionRecognitionData(
+		const char* tag, const char* subject, const char* activity,
+		Kore::vec3 rawPos, Kore::vec3 desPos, Kore::vec3 finalPos,
+		Kore::Quaternion rawRot, Kore::Quaternion desRot, Kore::Quaternion finalRot,
+		Kore::vec3 rawAngVel, Kore::Quaternion desAngVel,
+		Kore::vec3 rawLinVel, Kore::vec3 desLinVel,
+		float scale, double time);
+
+	// HMM
+	void startHMMLogger(const char* filename, int num);
+	void endHMMLogger();
+	void saveHMMData(const char* tag, float lastTime, Kore::vec3 pos, Kore::Quaternion rot);
+	void analyseHMM(const char* filename, double probability, bool newLine);
+	
+	bool readData(const int numOfEndEffectors, const char* filename, Kore::vec3* rawPos, Kore::Quaternion* rawRot, float& scale);
 };
