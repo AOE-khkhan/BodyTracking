@@ -658,7 +658,7 @@ namespace {
 				
 				//bool correct = hmm->stopRecognition();
 				if (correct || trials > 10) {
-					log(Info, "The movement is correct!");
+					log(Info, "The movement is correct! (Trial %i)", trials);
 					//Audio1::play(correctSound);
 					
 					showFeedback = false;
@@ -988,11 +988,6 @@ namespace {
 			case Kore::KeyD:
 				D = true;
 				break;
-			case Kore::KeyR:
-#ifdef KORE_STEAMVR
-				VrInterface::resetHmdPose();
-#endif
-				break;
 			case KeyL:
 				//Kore::log(Kore::LogLevel::Info, "cameraPos: (%f, %f, %f)", cameraPos.x(), cameraPos.y(), cameraPos.z());
 				//Kore::log(Kore::LogLevel::Info, "camUp: (%f, %f, %f, %f)", camUp.x(), camUp.y(), camUp.z(), camUp.w());
@@ -1014,9 +1009,25 @@ namespace {
 				yogaPose = pose1;
 				getNextStoryElement(false);
 				break;
+#ifdef KORE_STEAMVR
 			case Kore::KeyReturn:
-				initGame();
+				if (calibratedAvatar) initGame();
 				break;
+			case Kore::KeyR:
+				// Set size and reset an avatar to a default T-Pose
+				calibratedAvatar = false;
+				initTransAndRot();
+				avatar->resetPositionAndRotation();
+				setSize();
+				break;
+			case Kore::KeyC:
+				// Calibrate
+				assignControllerAndTracker();
+				calibrate();
+				calibratedAvatar = true;
+				log(Info, "Calibrate avatar");
+				break;
+#endif
 			default:
 				break;
 		}
