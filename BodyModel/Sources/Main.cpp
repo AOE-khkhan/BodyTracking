@@ -158,6 +158,8 @@ namespace {
 	bool colliding = false;
     double waitForAudio = 0;
 	int trials = 0;
+
+	bool recording = false;
 	
 	void renderVRDevice(int index, Kore::mat4 M) {
 		Graphics4::setMatrix(mLocation, M);
@@ -440,8 +442,7 @@ namespace {
 				avatar->setFixedOrientation(endEffector[endEffectorID]->getBoneIndex(), finalRot);
 			}
             
-            if (hmm->hmmRecording()) hmm->recordMovement(lastTime, endEffector[endEffectorID]->getName(), finalPos, finalRot);
-            if (hmm->hmmRecognizing()) hmm->recordMovement(lastTime, endEffector[endEffectorID]->getName(), finalPos, finalRot);
+            if (recording) hmm->recordMovement(lastTime, endEffector[endEffectorID]->getName(), finalPos, finalRot);
 		}
 	}
 	
@@ -593,8 +594,7 @@ namespace {
 		// HMM
 		if(hmm->isRecordingActive()) {
 			// Recording a movement
-			hmm->recording = !hmm->recording;
-			if (hmm->recording) {
+			if (recording) {
 				Audio1::play(startRecordingSound);
 				hmm->startRecording(endEffector[head]->getDesPosition(), endEffector[head]->getDesRotation());
 			} else {
@@ -603,8 +603,7 @@ namespace {
 			}
 		} else if(hmm->isRecognitionActive()) {
 			// Recognizing a movement
-			hmm->recognizing = !hmm->recognizing;
-			if (hmm->recognizing) {
+			if (recording) {
 				showFeedback = false;
 				
 				//Audio1::play(startRecognitionSound);
@@ -658,7 +657,7 @@ namespace {
 				
 				//bool correct = hmm->stopRecognition();
 				if (correct || trials > 10) {
-					log(Info, "The movement is correct! (Trial %i)", trials);
+					log(Info, "The movement is correct!");
 					//Audio1::play(correctSound);
 					
 					showFeedback = false;
@@ -668,7 +667,7 @@ namespace {
 
 					trials = 0;
 				} else {
-					log(Info, "The movement is wrong");
+					log(Info, "The movement is wrong (Trial %i)", trials);
 					//Audio1::play(wrongSound);
 
 					showFeedback = true;
@@ -786,9 +785,23 @@ namespace {
 			if (calibratedAvatar) initGame();
 		}
 		
-		// Trigger button => record data
+		// Track a movement as long as trigger button is pressed
 		if (buttonNr == 33 && value == 1) {
-			if (calibratedAvatar) record();
+			// Trigger button pressed
+			log(Info, "Trigger button pressed");
+			if (calibratedAvatar) {
+				recording = true;
+				record();
+			}
+		}
+		
+		if (buttonNr == 33 && value == 0) {
+			// Trigger button released
+			log(Info, "Trigger button released");
+			if (calibratedAvatar) {
+				recording = false;
+				record();
+			}
 		}
 	}
 	
@@ -1009,10 +1022,10 @@ namespace {
 				yogaPose = pose1;
 				getNextStoryElement(false);
 				break;
-#ifdef KORE_STEAMVR
 			case Kore::KeyReturn:
 				if (calibratedAvatar) initGame();
 				break;
+#ifdef KORE_STEAMVR
 			case Kore::KeyR:
 				// Set size and reset an avatar to a default T-Pose
 				calibratedAvatar = false;
