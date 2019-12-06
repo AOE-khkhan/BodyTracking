@@ -653,7 +653,7 @@ namespace {
 				++trials;
 				
 				hmm->getFeedback(hmm_head, hmm_hip, hmm_left_arm, hmm_right_arm, hmm_left_leg, hmm_right_leg);
-				logger->saveEvaluationData(storyLineTree->getCurrentNode()->getID(), yogaID, trials, hmm_head, hmm_hip, hmm_left_arm, hmm_right_arm, hmm_left_leg, hmm_right_leg);
+				logger->saveEvaluationData(lastTime, storyLineTree->getCurrentNode()->getID(), yogaID, trials, hmm_head, hmm_hip, hmm_left_arm, hmm_right_arm, hmm_left_leg, hmm_right_leg);
 				
 				//bool correct = hmm->stopRecognition();
 				if (correct || trials > 10) {
@@ -1002,12 +1002,10 @@ namespace {
 				D = true;
 				break;
 			case KeyL:
-				//Kore::log(Kore::LogLevel::Info, "cameraPos: (%f, %f, %f)", cameraPos.x(), cameraPos.y(), cameraPos.z());
-				//Kore::log(Kore::LogLevel::Info, "camUp: (%f, %f, %f, %f)", camUp.x(), camUp.y(), camUp.z(), camUp.w());
-				//Kore::log(Kore::LogLevel::Info, "camRight: (%f, %f, %f, %f)", camRight.x(), camRight.y(), camRight.z(), camRight.w());
-				//Kore::log(Kore::LogLevel::Info, "camForward: (%f, %f, %f, %f)", camForward.x(), camForward.y(), camForward.z(), camForward.w());
-				
-				if (calibratedAvatar) record();
+				if (calibratedAvatar) {
+					recording = true;
+					record();
+				}
 				break;
 			case Kore::KeyEscape:
 			case KeyQ:
@@ -1059,6 +1057,12 @@ namespace {
 				break;
 			case Kore::KeyD:
 				D = false;
+				break;
+			case KeyL:
+				if (calibratedAvatar) {
+					recording = false;
+					record();
+				}
 				break;
 			default:
 				break;
