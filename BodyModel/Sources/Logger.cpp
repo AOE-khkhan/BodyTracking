@@ -100,7 +100,7 @@ void Logger::startEvaluationLogger(const char* filename) {
 	evaluationDataOutputFile.open(evaluationDataPath, std::ios::app);	// Append to the end
 	
 	// Append header
-	evaluationDataOutputFile << "NodeID Pose Trials Head Hip LeftArm RightArm LeftLeg RightLeg\n";
+	evaluationDataOutputFile << "Time NodeID Pose Trials Head Hip LeftArm RightArm LeftLeg RightLeg\n";
 	evaluationDataOutputFile.flush();
 	
 	log(Kore::Info, "Start eval-logging!");
