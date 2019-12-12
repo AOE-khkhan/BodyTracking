@@ -147,7 +147,7 @@ namespace {
 #ifdef KORE_STEAMVR
 	bool controllerButtonsInitialized = false;
 	float currentUserHeight;
-	bool firstPersonMonitor = false;
+	bool firstPersonMonitor = true;
 #endif
 	
 	Movement* movement;
@@ -765,7 +765,7 @@ namespace {
 		//log(Info, "gamepadButton buttonNr = %i value = %f", buttonNr, value);
 
 		// Grip button => set size and reset an avatar to a default T-Pose
-		if (buttonNr == 2 && value == 1) {
+		/*if (buttonNr == 2 && value == 1) {
 			calibratedAvatar = false;
 			initTransAndRot();
 			avatar->resetPositionAndRotation();
@@ -783,7 +783,7 @@ namespace {
 		// Trackpad => start game
 		if (buttonNr == 32 && value == 1) {
 			if (calibratedAvatar) initGame();
-		}
+		}*/
 		
 		// Track a movement as long as trigger button is pressed
 		if (buttonNr == 33 && value == 1) {
@@ -903,23 +903,32 @@ namespace {
 		mat4 P = getProjectionMatrix();
 		mat4 V = getViewMatrix();
 
-		if (!firstPersonMonitor) renderAvatar(V, P);
-		else renderAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection);
+		if (firstPersonMonitor) renderAvatar(state.pose.vrPose.eye, state.pose.vrPose.projection);
+		else renderAvatar(V, P);
 		
 		if (renderTrackerAndController && !calibratedAvatar) renderAllVRDevices();
 		
 		if (renderAxisForEndEffector) renderCSForEndEffector();
 		
 		if (renderRoom) {
-			if (!firstPersonMonitor) renderLivingRoom(V, P);
-			else renderLivingRoom(state.pose.vrPose.eye, state.pose.vrPose.projection);
+			if (firstPersonMonitor) renderLivingRoom(state.pose.vrPose.eye, state.pose.vrPose.projection);
+			else renderLivingRoom(V, P);
 		}
 
-		if (showStoryElements) render3Dtext(V, P);
+		if (showStoryElements) {
+			if (firstPersonMonitor) render3Dtext(state.pose.vrPose.eye, state.pose.vrPose.projection);
+			else render3Dtext(V, P);
+		}
 
-		if (showFeedback) renderFeedbackText(V, P);
+		if (showFeedback) {
+			if (firstPersonMonitor) renderFeedbackText(state.pose.vrPose.eye, state.pose.vrPose.projection);
+			else renderFeedbackText(V, P);
+		}
 
-		if (showStoryElements) renderPlatforms(V, P);
+		if (showStoryElements) {
+			if (firstPersonMonitor) renderPlatforms(state.pose.vrPose.eye, state.pose.vrPose.projection);
+			else renderPlatforms(V, P);
+		}
 #else
 		// Read line
 		float scaleFactor;
@@ -1175,7 +1184,7 @@ namespace {
 		//avatar = new Avatar("avatar/female_1.ogex", "avatar/", structure);
 		//avatar = new Avatar("avatar/female_2.ogex", "avatar/", structure);
         //avatar = new Avatar("avatar/female_3.ogex", "avatar/", structure);
-        //avatar = new Avatar("avatar/female_4.ogex", "avatar/", structure);
+		//avatar = new Avatar("avatar/female_4.ogex", "avatar/", structure);
 		
 		const float colliderRadius = 0.2f;
 		avatarCollider = new SphereCollider(vec3(0, 0, 0), colliderRadius);
