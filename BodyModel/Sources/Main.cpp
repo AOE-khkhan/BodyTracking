@@ -789,7 +789,7 @@ namespace {
 		if (buttonNr == 33 && value == 1) {
 			// Trigger button pressed
 			log(Info, "Trigger button pressed");
-			if (calibratedAvatar) {
+			if (calibratedAvatar && initGame) {
 				recording = true;
 				record();
 			}
@@ -798,7 +798,7 @@ namespace {
 		if (buttonNr == 33 && value == 0) {
 			// Trigger button released
 			log(Info, "Trigger button released");
-			if (calibratedAvatar) {
+			if (calibratedAvatar && initGame) {
 				recording = false;
 				record();
 			}
@@ -820,7 +820,7 @@ namespace {
 			}
 		}
 
-		assert(count == 2);
+		//assert(count == 2);
 		controllerButtonsInitialized = true;
 	}
 #endif
@@ -1180,11 +1180,11 @@ namespace {
 		//avatar = new Avatar("avatar/male_3.ogex", "avatar/", structure);
 		
 		// Female avatars
-		avatar = new Avatar("avatar/female_0.ogex", "avatar/", structure);
+		//avatar = new Avatar("avatar/female_0.ogex", "avatar/", structure);
 		//avatar = new Avatar("avatar/female_1.ogex", "avatar/", structure);
 		//avatar = new Avatar("avatar/female_2.ogex", "avatar/", structure);
         //avatar = new Avatar("avatar/female_3.ogex", "avatar/", structure);
-		//avatar = new Avatar("avatar/female_4.ogex", "avatar/", structure);
+		avatar = new Avatar("avatar/female_4.ogex", "avatar/", structure);
 		
 		const float colliderRadius = 0.2f;
 		avatarCollider = new SphereCollider(vec3(0, 0, 0), colliderRadius);
